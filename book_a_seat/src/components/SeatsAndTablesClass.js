@@ -21,54 +21,54 @@ var MIN_RECT_HEIGHT = 8;
  * Outside the react.js world!
  * @param {*} svg 
  */
-const SeatsAndTablesClass = class  {
-  constructor(svg, data, role, setSelSeat){
+const SeatsAndTablesClass = class {
+  constructor(svg, data, role, setSelSeat) {
     this.svg = svg;
     this.role = role;
     this.seatData = data.seats;
     this.tableData = data.tables;
 
     this.selChair = null;
+    this.selTable = null;
     this.setSelSeat = setSelSeat;
 
     // finds max id
     this.maxSeatId = this.seatData.length === 0 ? 0 : Math.max(...this.seatData.map(o => o.id));
     this.maxTableId = this.tableData.length === 0 ? 0 : Math.max(...this.tableData.map(o => o.id));
-    
+
     // this.makeZoomPan();
     this.initSeatsSvg();
     this.initTableSvg();
 
-    this.tableWidth = document.getElementById("table-width");
-    this.tableHeight = document.getElementById("table-height");
     this.popup = d3.select("#popup1");
     this.popupClose = d3.select("#popup1 .close");
-    this.popupClose.on("click", (event, d)=>{this.popup.classed("is_shown", false);});
+    this.popupClose.on("click", (event, d) => { this.popup.classed("is_shown", false); });
   }
 
   // -------- seats ------------------------------------------------------------------------------
-  initSeatsSvg(){
+  initSeatsSvg() {
     // this.svg
     //   .selectAll("circle.chair").remove()
     const self = this;
-    let c = this.svg
+    let update = this.svg
       .selectAll("circle.chair")
-      .data(this.seatData, function(d) { return d.id; })
-      .enter()
-      .remove()
+      .data(this.seatData, function (d) { return d.id; });
+
+    update.exit().remove();
+
+    let c = update.enter()
       .append("circle")
-      .lower()
       .classed("chair", true);
-      c.attr("name", function(d){return d.name});
-    c.attr("cx", function(d){ return d.x; }).attr("cy", function(d){ return d.y; }).attr("r", 10);
-    if(this.role === 'admin'){
+    c.attr("name", function (d) { return d.name });
+    c.attr("cx", function (d) { return d.x; }).attr("cy", function (d) { return d.y; }).attr("r", 10);
+    if (this.role === 'admin') {
       c.call(d3.drag()
         .on("start", this.dragStarted)
         .on("drag", this.draggingSeat));
     }
     c.on("mouseenter mouseleave", this.rectHover)
-    c.on("click", function(event, d){self.clickSeat(event, d, d3.select(this))});
-    
+    c.on("click", function (event, d) { self.clickSeat(event, d, d3.select(this)) });
+
     // this.svg
     //   .selectAll("circle.chair").each(function(d, i) {
     //   // console.log(this, d, i);
@@ -84,16 +84,15 @@ const SeatsAndTablesClass = class  {
   draggingSeat(event, d) {
     // console.log(event.dx, d.x);
     // d3.select(this).attr("cx", d.x = event.dx + d.x).attr("cy", d.y = event.dy + d.y);
-    d3.select(this).attr("cx", d.x = event.x ).attr("cy", d.y = event.y);
+    d3.select(this).attr("cx", d.x = event.x).attr("cy", d.y = event.y);
   }
 
-  clickSeat(event, d, item){
+  clickSeat(event, d, item) {
+    console.log("Clicked seat:", d.id);
     d3.selectAll("circle.chair").classed('selected', false);
     this.selChair = d.id;
     item.classed('selected', true);
     this.setSelSeat(d.id);
-    // popup.classed("is_shown", true);
-    // popup.text('select chair with name');
   }
 
   rectHover(event, d) {
@@ -102,12 +101,15 @@ const SeatsAndTablesClass = class  {
   }
 
   // --------- tables -------------------------------------------------------------------------------
-  initTableSvg(){
+  initTableSvg() {
     const self = this;
-    let gTable = this.svg
+    let update = this.svg
       .selectAll("g.rectangle")
-      .data(this.tableData)
-      .enter()
+      .data(this.tableData, function (d) { return d.id; });
+
+    update.exit().remove();
+
+    let gTable = update.enter()
       .append("g")
       .classed("rectangle", true)
       .attr("transform", function (d) {
@@ -115,14 +117,15 @@ const SeatsAndTablesClass = class  {
       });
     gTable
       .append("rect")
-      .attr("width", function (d) {return d.width}).attr("height", function (d) {return d.height});
-    if(this.role === 'admin'){
-      gTable.call(d3.drag() 
-        .on("drag", function(event, d){self.tableWidth.value = ""; self.tableHeight.value = "";self.draggedTable.call(this, event, d)})
+      .attr("width", function (d) { return d.width }).attr("height", function (d) { return d.height });
+    if (this.role === 'admin') {
+      gTable.call(d3.drag()
+        .on("drag", function (event, d) { self.draggedTable.call(this, event, d) })
       );
+      gTable.on("click", function (event, d) { self.clickTable(event, d, d3.select(this)) });
     }
 
-    if(this.role === 'admin'){
+    if (this.role === 'admin') {
       let smallcircle = gTable
         .append("circle")
         .classed("bottomright", true)
@@ -130,25 +133,69 @@ const SeatsAndTablesClass = class  {
         .attr("cx", function (d) {
           return d.width;
         })
-        .attr("cy",function (d) {
+        .attr("cy", function (d) {
           return d.height;
         });
 
-        smallcircle.on("mouseenter mouseleave", this.resizerHover)
-          .call(d3.drag()
-            .container("g")
-            .on("start", this.rectResizeStart)
-            .on("drag", function(event, d){self.rectResizing.apply(this, [event, d, 
-              (val)=>{self.tableWidth.value = val;}, (val)=>{self.tableHeight.value = val;}])})
-            // .on("end", ()=>{self.tableWidth.value = ""; self.tableHeight.value = "";})
-          );
+      smallcircle.on("mouseenter mouseleave", this.resizerHover)
+        .call(d3.drag()
+          .container("g")
+          .on("start", this.rectResizeStart)
+          .on("drag", function (event, d) {
+            self.rectResizing.apply(this, [event, d,
+              (val) => { }, (val) => { }])
+          })
+        );
     }
+  }
+
+  clickTable(event, d, item) {
+    console.log("Clicked table:", d.id);
+    d3.selectAll("g.rectangle").classed('selected', false);
+    this.selTable = d.id;
+    item.classed('selected', true);
   }
 
   addTable(event, d) {
     this.maxTableId += 1;
     this.tableData.push({ id: this.maxTableId, "name": `table ${this.maxSeatId}`, x: 2, y: 2, width: 100, height: 60 });
     this.initTableSvg();
+  }
+
+  deleteSeat() {
+    console.log("deleteSeat called. selChair:", this.selChair);
+    if (this.selChair) {
+      const index = this.seatData.findIndex(s => s.id === this.selChair);
+      if (index > -1) {
+        this.seatData.splice(index, 1);
+        this.selChair = null;
+        this.svg.selectAll("circle.chair").filter(d => d.id === this.selChair).remove();
+        this.initSeatsSvg();
+      }
+    } else if (this.seatData.length > 0) {
+      // Fallback to delete last if nothing selected, or maybe just do nothing?
+      // User asked "delete the table and chair respectively", usually implies selection.
+      // But if no selection, maybe pop is okay? Let's stick to selection for now as it's safer.
+      // Actually, let's keep the pop as fallback if no selection, or just alert?
+      // Let's just pop if no selection for now to match previous behavior, but prioritize selection.
+      this.seatData.pop();
+      this.initSeatsSvg();
+    }
+  }
+
+  deleteTable() {
+    console.log("deleteTable called. selTable:", this.selTable);
+    if (this.selTable) {
+      const index = this.tableData.findIndex(t => t.id === this.selTable);
+      if (index > -1) {
+        this.tableData.splice(index, 1);
+        this.selTable = null;
+        this.initTableSvg();
+      }
+    } else if (this.tableData.length > 0) {
+      this.tableData.pop();
+      this.initTableSvg();
+    }
   }
 
   draggedTable(event, d) {
@@ -168,7 +215,7 @@ const SeatsAndTablesClass = class  {
   rectResizing(event, d, setWidthVal, setHeightVal) {
     d.width = Math.max(event.x - d.x + d.initWidth, MIN_RECT_WIDTH);
     d.height = Math.max(event.y - d.y + d.initHeight, MIN_RECT_HEIGHT);
-    
+
     setWidthVal(d.width);
     setHeightVal(d.height);
 

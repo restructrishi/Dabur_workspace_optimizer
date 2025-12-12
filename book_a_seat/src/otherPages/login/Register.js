@@ -1,135 +1,21 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Login from './Login';
-import Button from 'react-bootstrap/Button';
+import { Check, X, User as UserIcon, Lock, Eye, EyeOff } from 'lucide-react';
 import axios from '../../api/axios';
-import styled from 'styled-components';
 
 const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
-const PWD_REGEX = /^(?=.[a-z])(?=.[A-Z])(?=.[0-9])(?=.[!@#$%]).{8,24}$/;
-
-const MainContainer = styled.div`
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: linear-gradient(to bottom, #D1A272, white);
-`;
-
-const ElementStyle = styled.div`
-  margin-top: 2rem;
-  text-align: left;
-
-  section {
-    width: 500px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding: 1rem;
-    border: 1px solid rgba(0, 0, 0, 0.4);
-    background-image: url('https://api.daburinternational.com/wp-content/uploads/2024/01/fallback-image-square-800x800-1.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    backdrop-filter: blur(5px);
-    background-color: rgba(255, 255, 255, 0.7);
-  }
-
-  .background-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url('https://api.daburinternational.com/wp-content/uploads/2024/01/fallback-image-square-800x800-1.jpg');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.9;
-    z-index: 0.9;
-  }
-
-  form {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    flex-grow: 1;
-    padding-bottom: 1rem;
-
-    label, button {
-      margin-top: 0.6rem;
-    }
-  }
-
-  .form-group {
-    margin-top: 0.6rem;
-  }
-
-  .valid {
-    color: green;
-    margin-left: 0.5rem;
-  }
-
-  .invalid {
-    color: red;
-    margin-left: 0.5rem;
-  }
-
-  .errmsg {
-    background-color: lightpink;
-    color: red;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .offscreen {
-    display: none;
-  }
-
-  .line {
-    display: inline-block;
-    margin-top: 1rem;
-  }
-`;
-
-const NavbarStyle = styled.div`
-  .navbar {
-    width: 1400px;
-    margin-bottom: 1rem;
-    background: linear-gradient(bottom to top, #D1A272, white);
-  }
-
-  .navbar-nav {
-    margin-left: auto;
-  }
-
-  .nav-link {
-    margin-right: 1rem;
-  }
-`;
+const PWD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)\S{6,64}$/;
 
 const Navbar = () => {
   return (
-    <NavbarStyle>
-      <nav className="navbar navbar-expand-lg">
-        <div className="container-fluid">
-          <a href="https://www.dabur.com/" target="_blank" rel="noopener noreferrer">
-            <img src="https://img.etimg.com/thumb/width-1600,height-900,imgsize-34944,resizemode-75,msid-105238348/industry/cons-products/fmcg/140-year-old-dabur-family-hits-trouble-as-it-reinvents-its-business.jpg" alt="Dabur Logo" width="120" height="80" className="d-inline-block align-top" />
-          </a>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav">
-              <li className="nav-item">
-                <a className="nav-link" href="/login">Login</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-    </NavbarStyle>
+    <nav className="header-bar">
+      <div className="max-w-6xl mx-auto px-4 py-2 flex justify-between items-center">
+        <a href="https://www.dabur.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 no-underline">
+          <img src="https://img.etimg.com/thumb/width-1600,height-900,imgsize-34944,resizemode-75,msid-105238348/industry/cons-products/fmcg/140-year-old-dabur-family-hits-trouble-as-it-reinvents-its-business.jpg" alt="Dabur Logo" className="logo-img" />
+          <span className="brand-text">Dabur</span>
+        </a>
+        <a href="/login" className="nav-link-action">Login</a>
+      </div>
+    </nav>
   );
 };
 
@@ -147,10 +33,11 @@ const Register = () => {
 
   const [matchPwd, setMatchPwd] = useState('');
   const [validMatch, setValidMatch] = useState(false);
-  const [matchFocus, setMatchFocus] = useState(false);
 
   const [errMsg, setErrMsg] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     userRef.current.focus();
@@ -173,112 +60,147 @@ const Register = () => {
     e.preventDefault();
 
     if (!validName || !validPwd || !validMatch) {
-      setErrMsg('Invalid entry');
+      setErrMsg('Please ensure all requirements are met');
       return;
     }
 
     try {
-      const response = await axios.post('/api/register', { user, pwd });
-
+      const response = await axios.post('register', { user, pwd });
       console.log(response.data);
-      setSuccess(true); // Show success message
+      setSuccess(true);
+
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
 
     } catch (error) {
       if (!error?.response) {
-        setErrMsg('No Server Response');
+        setErrMsg('No server response. Please try again.');
       } else if (error.response?.status === 409) {
-        setErrMsg('Username Taken');
+        setErrMsg('Username already taken. Please choose another.');
       } else {
-        setErrMsg('Registration Failed');
+        setErrMsg('Registration failed. Please try again.');
       }
-      errRef.current.focus();
+      errRef.current?.focus();
     }
   };
+
+
   return (
-    <ElementStyle>
-      {success ? (
-        <Login />
-      ) : (
-        <section>
-          <p ref={errRef} className={errMsg ? 'errmsg' : 'offscreen'} aria-live="assertive">
-            {errMsg}
-          </p>
-          <h1>Registration Page</h1>
-          <form onSubmit={handleSubmit} className="form-group">
-            <label htmlFor="username">
-              Username:
-              <FontAwesomeIcon icon={faCheck} className={validName ? 'valid' : 'hide'} />
-              <FontAwesomeIcon icon={faTimes} className={validName || !user ? 'hide' : 'invalid'} />
-            </label>
-            <input
-              type="text"
-              id="username"
-              ref={userRef}
-              autoComplete="off"
-              onChange={(e) => setUser(e.target.value)}
-              value={user}
-              required
-              aria-invalid={validName ? 'false' : 'true'}
-              aria-describedby="uidnote"
-              className="form-control"
-              onFocus={() => setUserFocus(true)}
-              onBlur={() => setUserFocus(false)}
-            />
-
-            <label htmlFor="password">
-              Password:
-              <FontAwesomeIcon icon={faCheck} className={validPwd ? 'valid' : 'hide'} />
-              <FontAwesomeIcon icon={faTimes} className={validPwd || !pwd ? 'hide' : 'invalid'} />
-            </label>
-            <input
-              type="password"
-              id="password"
-              onChange={(e) => setPwd(e.target.value)}
-              value={pwd}
-              required
-              aria-invalid={validPwd ? 'false' : 'true'}
-              aria-describedby="pwdnote"
-              className="form-control"
-              onFocus={() => setPwdFocus(true)}
-              onBlur={() => setPwdFocus(false)}
-            />
-
-            <label htmlFor="confirm_pwd">
-              Confirm Password:
-              <FontAwesomeIcon icon={faCheck} className={validMatch && matchPwd ? 'valid' : 'hide'} />
-              <FontAwesomeIcon icon={faTimes} className={validMatch || !matchPwd ? 'hide' : 'invalid'} />
-            </label>
-            <input
-              type="password"
-              id="confirm_pwd"
-              onChange={(e) => setMatchPwd(e.target.value)}
-              value={matchPwd}
-              required
-              aria-invalid={validMatch ? 'false' : 'true'}
-              aria-describedby="confirmnote"
-              className="form-control"
-              onBlur={() => setMatchFocus(false)}
-            />
-            <Button type="submit">Sign Up</Button>
-          </form>
-          <p>
-            Already registered?
-            <br />
-            <span className="line">
-              <a href="/login">Sign In</a>
-            </span>
-          </p>
-        </section>
-      )}
-    </ElementStyle>
+    <div className="auth-page">
+      <Navbar />
+      <div className="hero">
+        <h1 className="mt-3 mb-1 text-[34px] brand-text">Dabur Workspace Optimizer</h1>
+        <p className="text-sm text-[#4b4b4b]">Create your account</p>
+      </div>
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="form-shell">
+          {success ? (
+            <div className="success-box">✓ Registration successful! Redirecting to login...</div>
+          ) : (
+            <>
+              {errMsg && (
+                <div ref={errRef} className="error-box">
+                  {errMsg}
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="username" className="flex items-center gap-2 auth-label">
+                    Username
+                    {user && (
+                      validName ? <Check className="text-green-600" size={14} /> : <X className="text-red-600" size={14} />
+                    )}
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-dabur-gold" size={16} />
+                    <input
+                      type="text"
+                      id="username"
+                      ref={userRef}
+                      autoComplete="off"
+                      onChange={(e) => setUser(e.target.value)}
+                      value={user}
+                      required
+                      placeholder="Choose a username"
+                      onFocus={() => setUserFocus(true)}
+                      onBlur={() => setUserFocus(false)}
+                      className={`auth-input ${user ? (validName ? 'border-green-500 focus:border-green-500 focus:ring-green-200' : 'border-red-500 focus:border-red-500 focus:ring-red-200') : 'border-gray-300 focus:border-dabur-gold focus:ring-dabur-gold/20'}`}
+                    />
+                  </div>
+                </div>
+                {userFocus && user && !validName && (
+                  <div className="bg-blue-50 border border-blue-300 rounded-lg p-3 text-xs text-blue-700">
+                    Requirements: 4-24 characters, start with letter, use letters/numbers/-/_
+                  </div>
+                )}
+                <div>
+                  <label htmlFor="password" className="flex items-center gap-2 auth-label">
+                    Password
+                    {pwd && (
+                      validPwd ? <Check className="text-green-600" size={14} /> : <X className="text-red-600" size={14} />
+                    )}
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-dabur-gold" size={16} />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="password"
+                      onChange={(e) => setPwd(e.target.value)}
+                      value={pwd}
+                      required
+                      placeholder="Create a strong password"
+                      onFocus={() => setPwdFocus(true)}
+                      onBlur={() => setPwdFocus(false)}
+                      className={`auth-input pr-12 ${pwd ? (validPwd ? 'border-green-500 focus:border-green-500 focus:ring-green-200' : 'border-red-500 focus:border-red-500 focus:ring-red-200') : 'border-gray-300 focus:border-dabur-gold focus:ring-dabur-gold/20'}`}
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-dabur-gold transition" aria-label="Toggle password visibility">
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+                {pwdFocus && pwd && !validPwd && (
+                  <div className="bg-blue-50 border border-blue-300 rounded-lg p-3 text-xs text-blue-700">
+                    Requirements: 6-64 characters, at least one letter and one number
+                  </div>
+                )}
+                <div>
+                  <label htmlFor="confirm_pwd" className="flex items-center gap-2 auth-label">
+                    Confirm Password
+                    {matchPwd && (
+                      validMatch ? <Check className="text-green-600" size={14} /> : <X className="text-red-600" size={14} />
+                    )}
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-dabur-gold" size={16} />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      id="confirm_pwd"
+                      onChange={(e) => setMatchPwd(e.target.value)}
+                      value={matchPwd}
+                      required
+                      placeholder="Confirm your password"
+                      className={`auth-input pr-12 ${matchPwd ? (validMatch ? 'border-green-500 focus:border-green-500 focus:ring-green-200' : 'border-red-500 focus:border-red-500 focus:ring-red-200') : 'border-gray-300 focus:border-dabur-gold focus:ring-dabur-gold/20'}`}
+                    />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-dabur-gold transition" aria-label="Toggle confirm password visibility">
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+                <button type="submit" disabled={!validName || !validPwd || !validMatch} className="auth-btn disabled:opacity-60">
+                  Create Account
+                </button>
+                <p className="text-center text-sm text-gray-700">
+                  Already have an account? <a href="/login" className="text-dabur-burgundy font-semibold hover:text-dabur-gold transition">Sign In</a>
+                </p>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+      <div className="footer">Powered by Dabur</div>
+    </div>
   );
 };
 
-const App = () => (
-  <MainContainer>
-    <Navbar />
-    <Register />
-  </MainContainer>
-);
-
-export default App;
+export default Register;

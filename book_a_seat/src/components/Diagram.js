@@ -4,17 +4,17 @@ import SvgPlan from './SvgPlan';
 import SeatsAndTablesClass from './SeatsAndTablesClass';
 import Popup from './Popup';
 import axios from '../api/axios';
-import React, { useState, useContext}  from 'react';
+import React, { useState, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSave } from '@fortawesome/free-solid-svg-icons'
+import { faSave, faTrash } from '@fortawesome/free-solid-svg-icons'
 import Button from 'react-bootstrap/Button';
 import AuthContext from '../context/AuthProvider';
 import Form from 'react-bootstrap/Form';
 import BModal from 'react-bootstrap/Modal';
 import styled from 'styled-components';
 
-const SERVER_URL =  process.env.REACT_APP_SERVER_URL;
-const DIAGRAM_URL =  SERVER_URL + 'api/seats';
+const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+const DIAGRAM_URL = SERVER_URL + 'api/seats';
 const SVG_WIDTH = "175mm";
 const SVG_HEIGHT = "125mm";
 
@@ -82,7 +82,7 @@ function Diagram(props) {
     height: SVG_HEIGHT,
   };
 
-  const loadData = function(svg){
+  const loadData = function (svg) {
     console.log('load diagram!', svg);
     const loadRequest = async () => {
       try {
@@ -90,11 +90,11 @@ function Diagram(props) {
           DIAGRAM_URL,
           // params,
           {
-              withCredentials: true,
+            withCredentials: true,
           }
         );
         console.log('=====> resp', response.data);
-        if (chairsMng == null){
+        if (chairsMng == null) {
           chairsMng = new SeatsAndTablesClass(svg, response.data, token.role, props.setSelSeat);
         }
       } catch (err) {
@@ -103,26 +103,26 @@ function Diagram(props) {
     }
     loadRequest();
   }
-  
-  const save = function(){
+
+  const save = function () {
     // console.log('save seatData!!!!!', chairsMng.seatData);
     const sendPostRequest = async () => {
       try {
-          const params = {seats: chairsMng.seatData, tables: chairsMng.tableData};
-          const response = await axios.post(
-            DIAGRAM_URL,
-            params,
-            {
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              withCredentials: true,
-            }
-          );
-          const resp = response.data;
-          // console.log('=====>resp', resp.successful);
-          setShowAlert('Row has been successfully saved!');
-          setTimeout(()=>{setShowAlert(null);}, 2500);
+        const params = { seats: chairsMng.seatData, tables: chairsMng.tableData };
+        const response = await axios.post(
+          DIAGRAM_URL,
+          params,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+          }
+        );
+        const resp = response.data;
+        // console.log('=====>resp', resp.successful);
+        setShowAlert('Row has been successfully saved!');
+        setTimeout(() => { setShowAlert(null); }, 2500);
       } catch (err) {
         console.log("ERROR save diagram", err);
       }
@@ -132,42 +132,31 @@ function Diagram(props) {
 
   return (
     <ElementStyle>
-      {token.role === 'admin' &&<div className='wrapper-mngr-diagram'>
-        <Button className='save' type="button" onClick={()=>{chairsMng.addSeat();}} >Add a chair <FontAwesomeIcon icon={faSave}/></Button>
-        <Button className='save' type="button" onClick={()=>{chairsMng.addTable();}} >Add a table <FontAwesomeIcon icon={faSave}/></Button>
-        
-          {/* <label>x:<input type="text" id="x" /></label>
-          <label>y:<input type="text" id="y"/></label> */}
-          <div className="form-group">
-          <Form.Label htmlFor="table-width">width:</Form.Label>
-          <Form.Control
-            type="input"
-            id="table-width"/>
-          </div>
-          <div className="form-group">
-          <Form.Label htmlFor="table-height">height:</Form.Label>
-          <Form.Control
-            type="input"
-            id="table-height"/>
-          </div>
+      {token.role === 'admin' && <div className='wrapper-mngr-diagram'>
+        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          <Button className='save' type="button" onClick={() => { chairsMng.addSeat(); }} >Add a chair <FontAwesomeIcon icon={faSave} /></Button>
+          <Button className='save' type="button" onClick={() => { chairsMng.addTable(); }} >Add a table <FontAwesomeIcon icon={faSave} /></Button>
+          <Button variant="danger" className='delete' type="button" onClick={() => { chairsMng.deleteSeat(); }} >Delete a chair <FontAwesomeIcon icon={faTrash} /></Button>
+          <Button variant="danger" className='delete' type="button" onClick={() => { chairsMng.deleteTable(); }} >Delete a table <FontAwesomeIcon icon={faTrash} /></Button>
+        </div>
       </div>}
       <div className="wrapper-svg" style={divStyle}>
         <SvgPlan width={SVG_WIDTH} height={SVG_HEIGHT} />
         <svg ref={ref} id="svg_draw" width={SVG_WIDTH} height={SVG_HEIGHT} version="1.1" xmlns="http://www.w3.org/2000/svg">
-      
+
         </svg>
       </div>
       {token.role === 'admin' && <div className='wrapper-btn-save'>
-        <BModal show={showAlert?true:false} size= 'sm' centered='true' backdrop="static">
+        <BModal show={showAlert ? true : false} size='sm' centered='true' backdrop="static">
           <BModal.Body>{showAlert}</BModal.Body>
           <BModal.Footer>
-            <Button variant="secondary" onClick={()=>setShowAlert(null)}>Close</Button>
+            <Button variant="secondary" onClick={() => setShowAlert(null)}>Close</Button>
           </BModal.Footer>
         </BModal>
-        <Button className='save' type="button" onClick={()=>{save();}} >Save <FontAwesomeIcon icon={faSave}/></Button>
-      </div>} 
-      <Popup/>
-     
+        <Button className='save' type="button" onClick={() => { save(); }} >Save <FontAwesomeIcon icon={faSave} /></Button>
+      </div>}
+      <Popup />
+
     </ElementStyle>
   )
 }
