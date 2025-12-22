@@ -60,6 +60,24 @@ const seed = async () => {
 }
 await seed()
 
+// --- In-Memory Store for Demo/Offline Mode ---
+let localSeats = [
+  { id: 1, name: 'Seat 1', x: 100, y: 100 },
+  { id: 2, name: 'Seat 2', x: 200, y: 100 },
+  { id: 3, name: 'Seat 3', x: 300, y: 100 },
+  { id: 4, name: 'Seat 4', x: 100, y: 200 },
+  { id: 5, name: 'Seat 5', x: 200, y: 200 },
+  { id: 6, name: 'Seat 6', x: 300, y: 200 },
+  { id: 7, name: 'Exec 1', x: 500, y: 150 },
+  { id: 8, name: 'Exec 2', x: 500, y: 250 },
+];
+let localTables = [
+  { id: 101, name: 'Meeting', x: 600, y: 200, width: 100, height: 100 },
+  { id: 102, name: 'Reception', x: 50, y: 50, width: 300, height: 40 },
+];
+let localReservations = []; // Stores objects like { _id, seatid, username, startdate, enddate }
+// ----------------------------------------------
+
 app.use('/api', authRoutes)
 
 app.get('/api/hello', (req, res) => {
@@ -75,22 +93,8 @@ app.get('/api/seats', async (req, res) => {
     const plan = await Plan.findOne({ key: 'default' })
     return res.json({ seats: plan?.seats || [], tables: plan?.tables || [] })
   }
-  // Fallback Dummy Data for Offline/Demo Mode
-  const dummySeats = [
-    { id: 1, name: 'Seat 1', x: 100, y: 100 },
-    { id: 2, name: 'Seat 2', x: 200, y: 100 },
-    { id: 3, name: 'Seat 3', x: 300, y: 100 },
-    { id: 4, name: 'Seat 4', x: 100, y: 200 },
-    { id: 5, name: 'Seat 5', x: 200, y: 200 },
-    { id: 6, name: 'Seat 6', x: 300, y: 200 },
-    { id: 7, name: 'Exec 1', x: 500, y: 150 },
-    { id: 8, name: 'Exec 2', x: 500, y: 250 },
-  ];
-  const dummyTables = [
-    { id: 101, name: 'Meeting', x: 600, y: 200, width: 100, height: 100 },
-    { id: 102, name: 'Reception', x: 50, y: 50, width: 300, height: 40 },
-  ];
-  res.json({ seats: dummySeats, tables: dummyTables })
+  // Offline: Return in-memory data
+  res.json({ seats: localSeats, tables: localTables })
 })
 
 app.post('/api/seats', async (req, res) => {
@@ -103,6 +107,9 @@ app.post('/api/seats', async (req, res) => {
     )
     return res.json({ successful: true, plan })
   }
+  // Offline: Update in-memory data
+  localSeats = seats;
+  localTables = tables;
   res.json({ successful: true })
 })
 
@@ -113,7 +120,11 @@ app.get('/api/reservations', async (req, res) => {
     const rslt = await Reservation.find({ seatid: selSeat }).sort({ startdate: 1 })
     return res.json({ rslt })
   }
-  return res.json({ rslt: [] })
+  // Offline: Filter local reservations
+  const rslt = localReservations
+    .filter(r => r.seatid === selSeat)
+    .sort((a, b) => new Date(a.startdate) - new Date(b.startdate));
+  return res.json({ rslt })
 })
 
 app.delete('/api/reservations', async (req, res) => {
@@ -123,6 +134,8 @@ app.delete('/api/reservations', async (req, res) => {
     await Reservation.deleteOne({ _id: id })
     return res.json({ successful: true })
   }
+  // Offline: Remove from local
+  localReservations = localReservations.filter(r => String(r._id) !== String(id));
   res.json({ successful: true })
 })
 
@@ -133,6 +146,7 @@ app.post('/api/reservations', async (req, res) => {
   }
   const startdate = new Date(interval[0])
   const enddate = new Date(interval[1])
+
   if (dbReady) {
     const overlaps = await Reservation.find({
       seatid: seatId,
@@ -145,7 +159,28 @@ app.post('/api/reservations', async (req, res) => {
     const r = await Reservation.create({ seatid: seatId, username: user, startdate, enddate })
     return res.json({ successful: true, id: r._id })
   }
-  res.json({ successful: true })
+
+  // Offline: Check overlaps
+  const overlaps = localReservations.filter(r =>
+    r.seatid === seatId &&
+    (
+      (new Date(r.startdate) < enddate && new Date(r.enddate) > startdate) ||
+      (new Date(r.startdate) <= startdate && new Date(r.enddate) >= enddate)
+    )
+  );
+
+  if (overlaps.length > 0) return res.status(409).json({ successful: false })
+
+  const newRes = {
+    _id: Date.now().toString(), // Dummy ID
+    seatid: seatId,
+    username: user,
+    startdate,
+    enddate
+  };
+  localReservations.push(newRes);
+
+  res.json({ successful: true, id: newRes._id })
 })
 
 app.put('/api/reservations', async (req, res) => {
@@ -155,6 +190,7 @@ app.put('/api/reservations', async (req, res) => {
   }
   const startdate = new Date(interval[0])
   const enddate = new Date(interval[1])
+
   if (dbReady) {
     const overlaps = await Reservation.find({
       _id: { $ne: id },
@@ -168,6 +204,28 @@ app.put('/api/reservations', async (req, res) => {
     await Reservation.updateOne({ _id: id }, { $set: { seatid: seatId, username: user, startdate, enddate } })
     return res.json({ successful: true })
   }
+
+  // Offline: Update logic
+  // 1. Remove old version for overlap check (or just filter out self)
+  const otherReservations = localReservations.filter(r => String(r._id) !== String(id));
+
+  // 2. Check overlaps with others
+  const overlaps = otherReservations.filter(r =>
+    r.seatid === seatId &&
+    (
+      (new Date(r.startdate) < enddate && new Date(r.enddate) > startdate) ||
+      (new Date(r.startdate) <= startdate && new Date(r.enddate) >= enddate)
+    )
+  );
+
+  if (overlaps.length > 0) return res.status(409).json({ successful: false })
+
+  // 3. Update
+  const idx = localReservations.findIndex(r => String(r._id) === String(id));
+  if (idx !== -1) {
+    localReservations[idx] = { ...localReservations[idx], seatid: seatId, username: user, startdate, enddate };
+  }
+
   res.json({ successful: true })
 })
 
@@ -178,7 +236,11 @@ app.get('/api/my_reservations', async (req, res) => {
     const rslt = await Reservation.find({ username: id }).sort({ startdate: 1 })
     return res.json({ rslt })
   }
-  res.json({ rslt: [] })
+  // Offline: Filter my reservations
+  const rslt = localReservations
+    .filter(r => r.username === id)
+    .sort((a, b) => new Date(a.startdate) - new Date(b.startdate));
+  return res.json({ rslt })
 })
 
 app.post('/api/cancel', async (req, res) => {
@@ -188,6 +250,8 @@ app.post('/api/cancel', async (req, res) => {
     await Reservation.deleteMany({ _id: { $in: ids } })
     return res.json({ successful: true })
   }
+  // Offline: Delete many
+  localReservations = localReservations.filter(r => !ids.some(delId => String(delId) === String(r._id)));
   res.json({ successful: true })
 })
 

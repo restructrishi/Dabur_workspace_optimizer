@@ -12,6 +12,7 @@ import Tabs from 'react-bootstrap/Tabs';
 import Diagram from './Diagram';
 import ReservationList from './ReservationList';
 import MyBooking from './MyBooking';
+import AdminDashboard from './AdminDashboard';
 
 const ElementStyle = styled.div`
   .navbar {
@@ -139,6 +140,8 @@ function NavBar() {
           className="mb-3"
           id="dashboard-tabs"
         >
+
+
           {token.role === 'user' && (
             <Tab eventKey="booking" title="My Booking">
               <div className="tab-content">
@@ -146,6 +149,15 @@ function NavBar() {
               </div>
             </Tab>
           )}
+
+          {token.role === 'admin' && (
+            <Tab eventKey="admin-panel" title="Admin Panel">
+              <div className="tab-content">
+                <AdminDashboard />
+              </div>
+            </Tab>
+          )}
+
           <Tab eventKey="reservation" title="New Reservation">
             <div className="tab-content">
               {/* Removed H2 as checking role isn't needed visually here */}
