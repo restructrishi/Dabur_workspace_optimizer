@@ -3,19 +3,23 @@ import AuthContext from '../../context/AuthProvider';
 import axios from '../../api/axios';
 import { User as UserIcon, Lock, Eye, EyeOff } from 'lucide-react';
 
-// Using axios instance baseURL
-
-// Using Tailwind and global CSS classes for layout and animations
-
+// --- Luxury Navbar Component ---
 const Navbar = () => {
   return (
     <nav className="header-bar">
-      <div className="max-w-6xl mx-auto px-4 py-2 flex justify-between items-center">
-        <a href="https://www.dabur.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 no-underline">
+      <div className="w-full max-w-7xl mx-auto px-6 py-4 flex justify-between items-center" style={{ width: '100%', justifyContent: 'space-between', display: 'flex' }}>
+        {/* Left: Brand Identity */}
+        <a href="https://www.dabur.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 no-underline group hover:opacity-90 transition">
           <img src="https://img.etimg.com/thumb/width-1600,height-900,imgsize-34944,resizemode-75,msid-105238348/industry/cons-products/fmcg/140-year-old-dabur-family-hits-trouble-as-it-reinvents-its-business.jpg" alt="Dabur Logo" className="logo-img" />
-          <span className="brand-text">Dabur</span>
+          <span className="brand-text">Dabur Workspace</span>
         </a>
-        <a href="/register" className="nav-link-action">Register</a>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-4">
+          <a href="/register" className="nav-btn-solid">
+            Create Account
+          </a>
+        </div>
       </div>
     </nav>
   );
@@ -32,6 +36,9 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // New State for "Remember Me" (Visual Only for now)
+  const [rememberMe, setRememberMe] = useState(false);
+
   useEffect(() => {
     userRef.current.focus();
   }, []);
@@ -39,6 +46,14 @@ const Login = () => {
   useEffect(() => {
     setErrMsg('');
   }, [user, pwd]);
+
+  // Dynamic Greeting based on time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -69,16 +84,10 @@ const Login = () => {
       if (!err?.response) {
         if (user === 'user1' || user === 'user') {
           setToken({ user, role: 'user', accessToken: 'demo' });
-          setUser('');
-          setPwd('');
-          setErrMsg('');
           return;
         }
         if (user === 'admin0' || user === 'admin') {
           setToken({ user, role: 'admin', accessToken: 'demo' });
-          setUser('');
-          setPwd('');
-          setErrMsg('');
           return;
         }
         setErrMsg('No server response. Please try again.');
@@ -97,22 +106,24 @@ const Login = () => {
   return (
     <div className="auth-page">
       <Navbar />
-      <div className="hero">
-        <h1 className="mt-3 mb-1 text-[34px] brand-text">Dabur Workspace Optimizer</h1>
-        <p className="text-sm text-[#4b4b4b]">Sign in to access your workspace</p>
-      </div>
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="form-shell">
+      <div className="w-full flex-1 flex flex-col items-center justify-center px-4 py-8 relative">
+        {/* Glass Card Container */}
+        <div className="form-shell glass-card">
+          <div className="mb-10 text-center">
+            <h2 className="hero-title">{getGreeting()}</h2>
+            <p className="hero-subtitle">Welcome back to your premium workspace</p>
+          </div>
+
           {errMsg && (
-            <div ref={errRef} className="error-box">
-              {errMsg}
+            <div ref={errRef} className="error-box animate-pulse">
+              <span className="font-bold">!</span> {errMsg}
             </div>
           )}
+
           <form onSubmit={handleSubmit}>
-            <div className="mb-3.5">
-              <label htmlFor="username" className="auth-label">Username</label>
+            <div className="mb-6">
+              <label htmlFor="username" className="auth-label">Username / Email</label>
               <div className="relative">
-                <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dabur-gold" size={16} />
                 <input
                   type="text"
                   id="username"
@@ -121,39 +132,67 @@ const Login = () => {
                   onChange={(e) => setUser(e.target.value)}
                   value={user}
                   required
-                  placeholder="Choose a username"
+                  placeholder="e.g. admin"
                   className="auth-input"
                 />
+                <UserIcon className="input-icon-left" size={20} />
               </div>
             </div>
-            <div className="mb-2">
+
+            <div className="mb-6">
               <label htmlFor="password" className="auth-label">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dabur-gold" size={16} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   onChange={(e) => setPwd(e.target.value)}
                   value={pwd}
                   required
-                  placeholder="Enter your password"
-                  className="auth-input pr-10"
+                  placeholder="••••••••"
+                  className="auth-input !pr-12"
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-600 hover:text-dabur-gold transition">
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                <Lock className="input-icon-left" size={20} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#D1A272] transition outline-none"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
-            <button type="submit" disabled={isLoading} className="auth-btn disabled:opacity-60">
-              {isLoading ? 'Signing In...' : 'Sign In'}
+
+            {/* Remember Me & Forgot Password Row */}
+            <div className="option-row mb-8">
+              <label className="checkbox-wrap">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="accent-[#D1A272] w-4 h-4 cursor-pointer"
+                />
+                <span>Remember me</span>
+              </label>
+              <a href="#" className="forgot-link">Forgot Password?</a>
+            </div>
+
+            <button type="submit" disabled={isLoading} className="auth-btn">
+              {isLoading ? 'Authenticating...' : 'Sign In'}
             </button>
-            <p className="text-center mt-4 text-[#4b4b4b] text-sm">
-              Don't have an account? <a href="/register" className="brand-text">Sign Up</a>
-            </p>
+
+            <div className="text-center mt-8 pt-6 border-t border-gray-100">
+              <p className="text-sm text-gray-500 font-light">
+                New to the platform? <a href="/register" className="text-[#1a4d2e] font-semibold hover:text-[#D1A272] transition ml-1">Create an account</a>
+              </p>
+            </div>
           </form>
         </div>
       </div>
-      <div className="footer">Powered by Dabur</div>
+      <div className="footer">
+        © 2025 Dabur International. All rights reserved. <br />
+        <span className="opacity-60 text-[10px] mt-1 block">Privacy Policy • Terms of Service</span>
+      </div>
     </div>
   );
 };

@@ -5,15 +5,23 @@ import axios from '../../api/axios';
 const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
 const PWD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)\S{6,64}$/;
 
+// --- Luxury Navbar Component (Shared) ---
 const Navbar = () => {
   return (
     <nav className="header-bar">
-      <div className="max-w-6xl mx-auto px-4 py-2 flex justify-between items-center">
-        <a href="https://www.dabur.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 no-underline">
+      <div className="w-full max-w-7xl mx-auto px-6 py-4 flex justify-between items-center" style={{ width: '100%', justifyContent: 'space-between', display: 'flex' }}>
+        {/* Left: Brand Identity */}
+        <a href="https://www.dabur.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 no-underline group hover:opacity-90 transition">
           <img src="https://img.etimg.com/thumb/width-1600,height-900,imgsize-34944,resizemode-75,msid-105238348/industry/cons-products/fmcg/140-year-old-dabur-family-hits-trouble-as-it-reinvents-its-business.jpg" alt="Dabur Logo" className="logo-img" />
-          <span className="brand-text">Dabur</span>
+          <span className="brand-text">Dabur Workspace</span>
         </a>
-        <a href="/login" className="nav-link-action">Login</a>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-4">
+          <a href="/login" className="nav-btn-solid">
+            Sign In
+          </a>
+        </div>
       </div>
     </nav>
   );
@@ -89,31 +97,33 @@ const Register = () => {
   return (
     <div className="auth-page">
       <Navbar />
-      <div className="hero">
-        <h1 className="mt-3 mb-1 text-[34px] brand-text">Dabur Workspace Optimizer</h1>
-        <p className="text-sm text-[#4b4b4b]">Create your account</p>
-      </div>
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="form-shell">
+      <div className="w-full flex-1 flex flex-col items-center justify-center px-4 py-8 relative">
+        <div className="form-shell glass-card">
+          <div className="text-center mb-8">
+            <h2 className="hero-title">Join The Team</h2>
+            <p className="hero-subtitle">Create your premium account today</p>
+          </div>
+
           {success ? (
-            <div className="success-box">✓ Registration successful! Redirecting to login...</div>
+            <div className="success-box animate-bounce">✓ Registration successful! Redirecting...</div>
           ) : (
             <>
               {errMsg && (
-                <div ref={errRef} className="error-box">
-                  {errMsg}
+                <div ref={errRef} className="error-box animate-pulse">
+                  <span className="font-bold">!</span> {errMsg}
                 </div>
               )}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="username" className="flex items-center gap-2 auth-label">
-                    Username
-                    {user && (
-                      validName ? <Check className="text-green-600" size={14} /> : <X className="text-red-600" size={14} />
-                    )}
+                  <label htmlFor="username" className="auth-label flex justify-between">
+                    <span>Username</span>
+                    <span className="opacity-80">
+                      {user && (
+                        validName ? <Check className="text-[#1a4d2e]" size={16} /> : <X className="text-red-500" size={16} />
+                      )}
+                    </span>
                   </label>
                   <div className="relative">
-                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-dabur-gold" size={16} />
                     <input
                       type="text"
                       id="username"
@@ -122,83 +132,107 @@ const Register = () => {
                       onChange={(e) => setUser(e.target.value)}
                       value={user}
                       required
-                      placeholder="Choose a username"
+                      placeholder="Username"
                       onFocus={() => setUserFocus(true)}
                       onBlur={() => setUserFocus(false)}
-                      className={`auth-input ${user ? (validName ? 'border-green-500 focus:border-green-500 focus:ring-green-200' : 'border-red-500 focus:border-red-500 focus:ring-red-200') : 'border-gray-300 focus:border-dabur-gold focus:ring-dabur-gold/20'}`}
+                      className={`auth-input ${user && !validName ? 'border-red-300 focus:border-red-400' : ''
+                        } ${user && validName ? 'border-[#1a4d2e]' : ''}`}
                     />
+                    <UserIcon className="input-icon-left" size={20} />
                   </div>
+                  {userFocus && user && !validName && (
+                    <p className="text-xs text-red-500 mt-2 pl-1 font-medium">
+                      • 4-24 characters<br />
+                      • Must start with a letter
+                    </p>
+                  )}
                 </div>
-                {userFocus && user && !validName && (
-                  <div className="bg-blue-50 border border-blue-300 rounded-lg p-3 text-xs text-blue-700">
-                    Requirements: 4-24 characters, start with letter, use letters/numbers/-/_
-                  </div>
-                )}
+
                 <div>
-                  <label htmlFor="password" className="flex items-center gap-2 auth-label">
-                    Password
-                    {pwd && (
-                      validPwd ? <Check className="text-green-600" size={14} /> : <X className="text-red-600" size={14} />
-                    )}
+                  <label htmlFor="password" className="auth-label flex justify-between">
+                    <span>Password</span>
+                    <span className="opacity-80">
+                      {pwd && (
+                        validPwd ? <Check className="text-[#1a4d2e]" size={16} /> : <X className="text-red-500" size={16} />
+                      )}
+                    </span>
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-dabur-gold" size={16} />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       id="password"
                       onChange={(e) => setPwd(e.target.value)}
                       value={pwd}
                       required
-                      placeholder="Create a strong password"
+                      placeholder="Strong Password"
                       onFocus={() => setPwdFocus(true)}
                       onBlur={() => setPwdFocus(false)}
-                      className={`auth-input pr-12 ${pwd ? (validPwd ? 'border-green-500 focus:border-green-500 focus:ring-green-200' : 'border-red-500 focus:border-red-500 focus:ring-red-200') : 'border-gray-300 focus:border-dabur-gold focus:ring-dabur-gold/20'}`}
+                      className="auth-input !pr-12"
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-dabur-gold transition" aria-label="Toggle password visibility">
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    <Lock className="input-icon-left" size={20} />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#D1A272] transition outline-none" aria-label="Toggle password visibility" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                  {pwdFocus && pwd && !validPwd && (
+                    <p className="text-xs text-red-500 mt-2 pl-1 font-medium">
+                      • 8-24 characters<br />
+                      • Uppercase, Lowercase, Number & Special Char
+                    </p>
+                  )}
                 </div>
-                {pwdFocus && pwd && !validPwd && (
-                  <div className="bg-blue-50 border border-blue-300 rounded-lg p-3 text-xs text-blue-700">
-                    Requirements: 6-64 characters, at least one letter and one number
-                  </div>
-                )}
+
                 <div>
-                  <label htmlFor="confirm_pwd" className="flex items-center gap-2 auth-label">
-                    Confirm Password
-                    {matchPwd && (
-                      validMatch ? <Check className="text-green-600" size={14} /> : <X className="text-red-600" size={14} />
-                    )}
+                  <label htmlFor="confirm_pwd" className="auth-label flex justify-between">
+                    <span>Confirm Password</span>
+                    <span className="opacity-80">
+                      {matchPwd && (
+                        validMatch ? <Check className="text-[#1a4d2e]" size={16} /> : <X className="text-red-500" size={16} />
+                      )}
+                    </span>
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-dabur-gold" size={16} />
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       id="confirm_pwd"
                       onChange={(e) => setMatchPwd(e.target.value)}
                       value={matchPwd}
                       required
-                      placeholder="Confirm your password"
-                      className={`auth-input pr-12 ${matchPwd ? (validMatch ? 'border-green-500 focus:border-green-500 focus:ring-green-200' : 'border-red-500 focus:border-red-500 focus:ring-red-200') : 'border-gray-300 focus:border-dabur-gold focus:ring-dabur-gold/20'}`}
+                      placeholder="Confirm Password"
+                      className="auth-input !pr-12"
                     />
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-dabur-gold transition" aria-label="Toggle confirm password visibility">
-                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    <Lock className="input-icon-left" size={20} />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#D1A272] transition outline-none" aria-label="Toggle confirm password visibility" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                  {matchPwd && !validMatch && (
+                    <p className="text-xs text-red-500 mt-2 pl-1 font-medium">
+                      Passwords do not match.
+                    </p>
+                  )}
                 </div>
-                <button type="submit" disabled={!validName || !validPwd || !validMatch} className="auth-btn disabled:opacity-60">
-                  Create Account
-                </button>
-                <p className="text-center text-sm text-gray-700">
-                  Already have an account? <a href="/login" className="text-dabur-burgundy font-semibold hover:text-dabur-gold transition">Sign In</a>
-                </p>
+
+                <div className="pt-2">
+                  <button type="submit" disabled={!validName || !validPwd || !validMatch} className="auth-btn disabled:opacity-50 disabled:cursor-not-allowed">
+                    Create My Account
+                  </button>
+                </div>
+
+                <div className="text-center mt-8 pt-6 border-t border-gray-100">
+                  <p className="text-sm text-gray-500 font-light">
+                    Already have an account? <a href="/login" className="text-[#1a4d2e] font-semibold hover:text-[#D1A272] transition ml-1">Sign In</a>
+                  </p>
+                </div>
               </form>
             </>
           )}
         </div>
       </div>
-      <div className="footer">Powered by Dabur</div>
+      <div className="footer">
+        © 2025 Dabur International. All rights reserved. <br />
+        <span className="opacity-60 text-[10px] mt-1 block">Privacy Policy • Terms of Service</span>
+      </div>
     </div>
   );
 };

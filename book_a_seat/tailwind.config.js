@@ -10,6 +10,8 @@ module.exports = {
                 'dabur-light-gold': '#f5d7a8',
                 'dabur-burgundy': '#8B1538',
                 'dabur-coral': '#c97a5f',
+                'dabur-green': '#1a4d2e',
+                'dabur-dark-gray': '#2c2c2c',
             },
             animation: {
                 'gradient-shift': 'gradient-shift 15s ease infinite',
