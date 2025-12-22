@@ -15,80 +15,78 @@ import MyBooking from './MyBooking';
 
 const ElementStyle = styled.div`
   .navbar {
-    background-color: #D1A272;
+     /* Handled by global .header-bar now, but overriding bootstrap specifics */
+     background: transparent !important; 
+     padding: 0;
   }
-
-  .navbar-brand {
-    color: #fff;
-    &:hover {
-      color: #ddd;
+  
+  /* Ensure tabs look premium */
+  .nav-tabs {
+    border-bottom: 2px solid rgba(209, 162, 114, 0.2);
+    
+    .nav-link {
+       color: #1a4d2e;
+       font-family: 'Outfit', sans-serif;
+       font-weight: 500;
+       border: none;
+       background: transparent;
+       margin-bottom: -2px;
+       border-bottom: 2px solid transparent;
+       
+       &:hover {
+         color: #D1A272;
+       }
+       
+       &.active {
+         color: #D1A272;
+         background: transparent;
+         border-bottom: 2px solid #D1A272;
+         font-weight: 600;
+       }
     }
-  }
-
-  .navbar-collapse {
-    justify-content: flex-end;
-  }
-
-  .dropdown-toggle::after {
-    display: none;
-  }
-
-  .dropdown-menu {
-    background-color: #007bff;
-    border: none;
-  }
-
-  .dropdown-item {
-    color: #fff;
-    &:hover {
-      background-color: #0056b3;
-    }
-  }
-
-  .tabs-container {
-    margin-top: 20px;
-  }
-
-  .tab-content {
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-
-  .wrapper-dashboard {
-    padding: 20px;
-  }
-
-  h2 {
-    margin-bottom: 20px;
   }
 
   .user-logo {
-    display: flex;
-    align-items: center;
-    color: #fff;
-    font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 5px;
-    background-color: #D1A272;
-    &:hover {
-      background-color: black;
-      cursor: pointer;
-    }
+     display: inline-flex;
+     align-items: center;
+     gap: 8px;
+     color: #1a4d2e;
+     font-weight: 600;
+     font-family: 'Outfit', sans-serif;
+     cursor: pointer;
+     transition: opacity 0.3s;
+     
+     &:hover {
+        opacity: 0.8;
+     }
   }
 
-  .user-logo .fa-user {
-    margin-left: 10px;
+  /* Glass Container for Main Content */
+  .tabs-container {
+    margin-top: 32px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  }
+
+  .tab-content {
+    margin-top: 20px;
   }
 `;
 
 function NavBar() {
   const { token, setToken } = useContext(AuthContext);
+
+  // Luxury User Dropdown Trigger
   const user = (
     <span className="user-logo">
-      {token.user}
-      <FontAwesomeIcon icon={faUser} transform="grow-5" />
+      <span>{token.user}</span>
+      <div className="w-8 h-8 rounded-full bg-[#1a4d2e] text-white flex items-center justify-center text-xs">
+        <FontAwesomeIcon icon={faUser} />
+      </div>
     </span>
   );
 
@@ -116,29 +114,33 @@ function NavBar() {
 
   return (
     <ElementStyle>
-      <Navbar expand="lg" className="navbar">
-        <Container fluid>
-          <Navbar.Brand href="#home">Reserve a seat</Navbar.Brand>
-          <Navbar.Toggle aria-controls="navbarScroll" />
-          <Navbar.Collapse id="navbarScroll">
-            <Nav className="ms-auto">
-              <NavDropdown title={user} id="navbarScrollingDropdown" align="end">
-                <NavDropdown.Item href="#" onClick={logout}>
-                  Logout
-                </NavDropdown.Item>
-              </NavDropdown>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+      {/* Luxury Header Bar (Same structure as Login.js for consistency) */}
+      <div className="header-bar">
+        <div style={{ width: '100%', maxWidth: '1280px', margin: '0 auto', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Brand */}
+          <a href="/" className="flex items-center gap-3 no-underline group hover:opacity-90 transition">
+            <img src="https://img.etimg.com/thumb/width-1600,height-900,imgsize-34944,resizemode-75,msid-105238348/industry/cons-products/fmcg/140-year-old-dabur-family-hits-trouble-as-it-reinvents-its-business.jpg" alt="Dabur Logo" className="logo-img" />
+            <span className="brand-text">Dabur Workspace</span>
+          </a>
+
+          {/* Actions / User Profile */}
+          <NavDropdown title={user} id="navbarScrollingDropdown" align="end">
+            <NavDropdown.Item href="#" onClick={logout} className="text-sm">
+              Logout
+            </NavDropdown.Item>
+          </NavDropdown>
+        </div>
+      </div>
+
       <Container className="tabs-container">
         <Tabs
           onSelect={(tabElName) => onSelectChange(tabElName)}
           defaultActiveKey={token.role === 'user' ? 'booking' : 'reservation'}
           className="mb-3"
+          id="dashboard-tabs"
         >
           {token.role === 'user' && (
-            <Tab eventKey="booking" title="My booking">
+            <Tab eventKey="booking" title="My Booking">
               <div className="tab-content">
                 <MyBooking username={token.user} key={keyBooking} />
               </div>
@@ -146,7 +148,7 @@ function NavBar() {
           )}
           <Tab eventKey="reservation" title="New Reservation">
             <div className="tab-content">
-              <h2>{token.role === 'admin' ? 'ADMIN - Add seats and chairs' : ''}</h2>
+              {/* Removed H2 as checking role isn't needed visually here */}
               {keyDiagram > 0 && (
                 <div className="wrapper-dashboard" key={'diagram_' + keyDiagram}>
                   <Diagram setSelSeat={setSelSeatHandler} />

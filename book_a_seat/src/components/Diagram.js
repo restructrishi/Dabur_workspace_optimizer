@@ -131,30 +131,45 @@ function Diagram(props) {
   }
 
   return (
+  return (
     <ElementStyle>
-      {token.role === 'admin' && <div className='wrapper-mngr-diagram'>
-        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <Button className='save' type="button" onClick={() => { chairsMng.addSeat(); }} >Add a chair <FontAwesomeIcon icon={faSave} /></Button>
-          <Button className='save' type="button" onClick={() => { chairsMng.addTable(); }} >Add a table <FontAwesomeIcon icon={faSave} /></Button>
-          <Button variant="danger" className='delete' type="button" onClick={() => { chairsMng.deleteSeat(); }} >Delete a chair <FontAwesomeIcon icon={faTrash} /></Button>
-          <Button variant="danger" className='delete' type="button" onClick={() => { chairsMng.deleteTable(); }} >Delete a table <FontAwesomeIcon icon={faTrash} /></Button>
+      {/* Controls visible to ALL users now (Premium Feature) */}
+      <div className='wrapper-mngr-diagram' style={{ marginBottom: '24px', padding: '16px', background: 'rgba(255,255,255,0.5)', borderRadius: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <Button className='nav-btn-solid' style={{ border: 'none', background: '#1a4d2e' }} type="button" onClick={() => { chairsMng.addSeat(); }} >
+            Add Chair <FontAwesomeIcon icon={faSave} className="ml-2" />
+          </Button>
+          <Button className='nav-btn-solid' style={{ border: 'none', background: '#1a4d2e' }} type="button" onClick={() => { chairsMng.addTable(); }} >
+            Add Table <FontAwesomeIcon icon={faSave} className="ml-2" />
+          </Button>
+          <Button className='nav-btn-solid' style={{ border: 'none', background: '#8B1538' }} type="button" onClick={() => { chairsMng.deleteSeat(); }} >
+            Delete Chair <FontAwesomeIcon icon={faTrash} className="ml-2" />
+          </Button>
+          <Button className='nav-btn-solid' style={{ border: 'none', background: '#8B1538' }} type="button" onClick={() => { chairsMng.deleteTable(); }} >
+            Delete Table <FontAwesomeIcon icon={faTrash} className="ml-2" />
+          </Button>
         </div>
-      </div>}
-      <div className="wrapper-svg" style={divStyle}>
+      </div>
+
+      <div className="wrapper-svg" style={{ ...divStyle, border: '1px solid #e0e0e0', borderRadius: '12px', background: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
         <SvgPlan width={SVG_WIDTH} height={SVG_HEIGHT} />
         <svg ref={ref} id="svg_draw" width={SVG_WIDTH} height={SVG_HEIGHT} version="1.1" xmlns="http://www.w3.org/2000/svg">
 
         </svg>
       </div>
-      {token.role === 'admin' && <div className='wrapper-btn-save'>
+
+      {/* Save Button also visible for everyone to persist changes */}
+      <div className='wrapper-btn-save' style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
         <BModal show={showAlert ? true : false} size='sm' centered='true' backdrop="static">
           <BModal.Body>{showAlert}</BModal.Body>
           <BModal.Footer>
             <Button variant="secondary" onClick={() => setShowAlert(null)}>Close</Button>
           </BModal.Footer>
         </BModal>
-        <Button className='save' type="button" onClick={() => { save(); }} >Save <FontAwesomeIcon icon={faSave} /></Button>
-      </div>}
+        <Button className='auth-btn' style={{ width: 'auto', padding: '12px 32px', marginTop: '0' }} type="button" onClick={() => { save(); }} >
+          Save Layout <FontAwesomeIcon icon={faSave} className="ml-2" />
+        </Button>
+      </div>
       <Popup />
 
     </ElementStyle>

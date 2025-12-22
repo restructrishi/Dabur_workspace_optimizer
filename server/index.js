@@ -75,7 +75,22 @@ app.get('/api/seats', async (req, res) => {
     const plan = await Plan.findOne({ key: 'default' })
     return res.json({ seats: plan?.seats || [], tables: plan?.tables || [] })
   }
-  res.json({ seats: [], tables: [] })
+  // Fallback Dummy Data for Offline/Demo Mode
+  const dummySeats = [
+    { id: 1, name: 'Seat 1', x: 100, y: 100 },
+    { id: 2, name: 'Seat 2', x: 200, y: 100 },
+    { id: 3, name: 'Seat 3', x: 300, y: 100 },
+    { id: 4, name: 'Seat 4', x: 100, y: 200 },
+    { id: 5, name: 'Seat 5', x: 200, y: 200 },
+    { id: 6, name: 'Seat 6', x: 300, y: 200 },
+    { id: 7, name: 'Exec 1', x: 500, y: 150 },
+    { id: 8, name: 'Exec 2', x: 500, y: 250 },
+  ];
+  const dummyTables = [
+    { id: 101, name: 'Meeting', x: 600, y: 200, width: 100, height: 100 },
+    { id: 102, name: 'Reception', x: 50, y: 50, width: 300, height: 40 },
+  ];
+  res.json({ seats: dummySeats, tables: dummyTables })
 })
 
 app.post('/api/seats', async (req, res) => {
@@ -177,4 +192,4 @@ app.post('/api/cancel', async (req, res) => {
 })
 
 const PORT = process.env.PORT || 3005
-app.listen(PORT, () => {})
+app.listen(PORT, () => { })
