@@ -21,8 +21,9 @@ export const loginUser = async (req, res) => {
     }
 
     if (['admin', 'admin0'].includes(user)) return res.json({ token: 'demo', role: 'admin' })
-    if (['user', 'user1'].includes(user)) return res.json({ token: 'demo', role: 'user' })
-    return res.status(503).json({ message: 'Service Unavailable' })
+    // In demo mode (offline), accept any other username as a standard user
+    // This allows users to "log in" with the name they just "registered"
+    return res.json({ token: 'demo', role: 'user' })
   } catch (err) {
     console.error('login error', err)
     return res.status(500).json({ message: 'Internal Server Error' })
